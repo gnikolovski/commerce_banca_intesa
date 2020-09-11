@@ -37,7 +37,7 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
   /**
    * Tests creating Banca Intesa payment gateway.
    */
-  public function testCreateAcceptJSGateway() {
+  public function testCreateBancaIntesaGateway() {
     $this->drupalGet('admin/commerce/config/payment-gateways');
     $this->getSession()->getPage()->clickLink('Add payment gateway');
     $this->assertSession()->addressEquals('admin/commerce/config/payment-gateways/add');
