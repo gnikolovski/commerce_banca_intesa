@@ -86,7 +86,7 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
     $this->assertEmpty($config['send_mail']['fail']);
     $this->assertEquals('success', $config['show_payment_report_table']['success']);
     $this->assertEmpty($config['show_payment_report_table']['fail']);
-    $this->assertTrue('request', $config['api_logging']['request']);
+    $this->assertEquals('request', $config['api_logging']['request']);
     $this->assertEmpty($config['api_logging']['response']);
   }
 
