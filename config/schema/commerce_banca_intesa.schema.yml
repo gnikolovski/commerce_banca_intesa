@@ -1,0 +1,39 @@
+commerce_payment.commerce_payment_gateway.plugin.banca_intesa_offsite_redirect:
+  type: commerce_payment_gateway_configuration
+  mapping:
+    test_redirect_url:
+      type: string
+      label: 'Test redirect URL'
+    live_redirect_url:
+      type: string
+      label: 'Live redirect URL'
+    merchant_id:
+      type: string
+      label: 'Merchant ID'
+    store_key:
+      type: string
+      label: 'Store key'
+    username:
+      type: string
+      label: 'Username'
+    password:
+      type: string
+      label: 'Password'
+    use_display_name:
+      type: boolean
+      label: 'Use Display name as gateway name'
+    send_mail:
+      type: sequence
+      sequence:
+        type: string
+      label: 'Send mail'
+    show_payment_report_table:
+      type: sequence
+      sequence:
+        type: string
+      label: 'Show Payment report table'
+    api_logging:
+      type: sequence
+      sequence:
+        type: string
+      label: 'Log the following messages for debugging'

@@ -1,0 +1,54 @@
+{#
+/**
+ * @file
+ * Template for the Banca Intesa payment report mail.
+ *
+ * Available variables:
+ * - order_entity: The order entity.
+ * - message: The message.
+ * - payment_report: The payment report.
+ *
+ * @ingroup themeable
+ */
+#}
+<table style="margin: 15px auto 0 auto; max-width: 768px; font-family: arial,sans-serif">
+  <tbody>
+  <tr>
+    <td>
+      <table style="margin-left: auto; margin-right: auto; max-width: 768px; text-align: center;">
+        <tbody>
+        <tr>
+          <td>
+            <a href="{{ url('<front>') }}" style="color: #0e69be; text-decoration: none; font-weight: bold; margin-top: 15px;">{{ order_entity.getStore.label }}</a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <table style="text-align: center; min-width: 450px; margin: 5px auto 0 auto; border: 1px solid #cccccc; border-radius: 5px; padding: 40px 30px 30px 30px;">
+        <tbody>
+        <tr>
+          <td colspan="2" style="font-size: 30px; padding-bottom: 30px">{{ 'Payment report'|t }}</td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding-bottom: 30px">
+            {% block message %}
+              {{ message }}
+            {% endblock %}
+          </td>
+        </tr>
+        <tr>
+          <th>{{ 'Parameter name'|t }}</th>
+          <th>{{ 'Parameter value'|t }}</th>
+        </tr>
+        {% for item in payment_report %}
+          <tr>
+            <th style="font-weight: normal;">{{ item.name }}</th>
+            <th style="font-weight: normal;">{{ item.value }}</th>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </td>
+  </tr>
+  </tbody>
+</table>
