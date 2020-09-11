@@ -82,12 +82,12 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
     $this->assertEquals('username', $config['username']);
     $this->assertEquals('password', $config['password']);
     $this->assertTrue($config['use_display_name']);
-    $this->assertTrue($config['send_mail']['success']);
-    $this->assertFalse($config['send_mail']['fail']);
-    $this->assertTrue($config['show_payment_report_table']['success']);
-    $this->assertFalse($config['show_payment_report_table']['fail']);
-    $this->assertTrue($config['api_logging']['request']);
-    $this->assertFalse($config['api_logging']['response']);
+    $this->assertEquals('success', $config['send_mail']['success']);
+    $this->assertEmpty($config['send_mail']['fail']);
+    $this->assertEquals('success', $config['show_payment_report_table']['success']);
+    $this->assertEmpty($config['show_payment_report_table']['fail']);
+    $this->assertTrue('request', $config['api_logging']['request']);
+    $this->assertEmpty($config['api_logging']['response']);
   }
 
 }
