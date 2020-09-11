@@ -10,6 +10,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Class BancaIntesaService.
@@ -49,6 +50,13 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   protected $profileViewBuilder;
 
   /**
+   * The current request.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $currentRequest;
+
+  /**
    * BancaIntesaService constructor.
    *
    * @param \Drupal\Core\Render\RendererInterface $renderer
@@ -59,12 +67,15 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
    *   The mail handler.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
    */
-  public function __construct(RendererInterface $renderer, LoggerChannelFactoryInterface $loggerFactory, MailHandlerInterface $mail_handler, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(RendererInterface $renderer, LoggerChannelFactoryInterface $loggerFactory, MailHandlerInterface $mail_handler, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack) {
     $this->renderer = $renderer;
     $this->logger = $loggerFactory->get('commerce_banca_intesa');
     $this->mailHandler = $mail_handler;
     $this->profileViewBuilder = $entity_type_manager->getViewBuilder('profile');
+    $this->currentRequest = $request_stack->getCurrentRequest();
   }
 
   /**
@@ -99,7 +110,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
       'lang' => 'sr',
       'rnd' => $random_string,
       'encoding' => 'utf-8',
-      'shopurl' => \Drupal::request()->getSchemeAndHttpHost(),
+      'shopurl' => $this->currentRequest->getSchemeAndHttpHost(),
       'hashAlgorithm' => 'ver2',
       'hash' => $this->generateHash($configuration, $order, $random_string),
     ];

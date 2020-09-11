@@ -1,4 +1,4 @@
 services:
   commerce_banca_intesa.banca_intesa_service:
     class: Drupal\commerce_banca_intesa\BancaIntesaService
-    arguments: ['@renderer', '@logger.factory', '@commerce.mail_handler', '@entity_type.manager']
+    arguments: ['@renderer', '@logger.factory', '@commerce.mail_handler', '@entity_type.manager', '@request_stack']
