@@ -1,7 +1,7 @@
 {
   "name": "drupal-modules/commerce_banca_intesa",
   "description": "Provides Commerce integration with Banca Intesa Serbia payment services.",
-  "type": "drupal-custom-module",
+  "type": "drupal-module",
   "authors": [
     {
       "name": "Goran Nikolovski",
