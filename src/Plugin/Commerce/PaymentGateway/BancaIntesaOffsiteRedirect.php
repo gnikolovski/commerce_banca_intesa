@@ -223,7 +223,7 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
     if ($success == FALSE) {
       if (!empty($this->configuration['send_mail']['fail'])) {
         $mail_message = $this->t('Something went wrong at @gateway. Please review your information and try again.', [
-          '@gateway' => $this->bancaIntesaService->getPaymentGatewayName($this->configuration),
+          '@gateway' => $this->getPaymentGatewayName(),
         ]);
         $payment_report = $this->bancaIntesaService->buildPaymentReportTable($request);
         $this->bancaIntesaService->sendMail($order, $mail_message, $payment_report);
