@@ -97,6 +97,10 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
    */
   public function buildPostData(array $configuration, OrderInterface $order) {
     $random_string = md5(microtime());
+    $shop_url = Url::fromRoute('<front>', [], [
+      'absolute' => TRUE,
+      'https' => TRUE,
+    ]);
 
     return [
       'currency' => '941',
@@ -110,7 +114,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
       'lang' => 'sr',
       'rnd' => $random_string,
       'encoding' => 'utf-8',
-      'shopurl' => $this->currentRequest->getSchemeAndHttpHost(),
+      'shopurl' => $shop_url->toString(),
       'hashAlgorithm' => 'ver2',
       'hash' => $this->generateHash($configuration, $order, $random_string),
     ];
@@ -238,7 +242,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
     $return_url = Url::fromRoute('commerce_payment.checkout.return', [
       'commerce_order' => $order->id(),
       'step' => 'payment',
-    ], ['absolute' => TRUE]);
+    ], ['absolute' => TRUE, 'https' => TRUE]);
     return $return_url->toString();
   }
 
@@ -255,7 +259,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
     $cancel_url = Url::fromRoute('commerce_payment.checkout.cancel', [
       'commerce_order' => $order->id(),
       'step' => 'payment',
-    ], ['absolute' => TRUE]);
+    ], ['absolute' => TRUE, 'https' => TRUE]);
     return $cancel_url->toString();
   }
 
