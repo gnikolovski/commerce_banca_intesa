@@ -54,8 +54,6 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       'live_redirect_url' => 'https://bib.eway2pay.com/fim/est3Dgate',
       'merchant_id' => '',
       'store_key' => '',
-      'username' => '',
-      'password' => '',
       'use_display_name' => FALSE,
       'send_mail' => [
         'success' => 'success',
@@ -103,20 +101,6 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       '#type' => 'textfield',
       '#title' => $this->t('Store key'),
       '#default_value' => $this->configuration['store_key'],
-      '#required' => TRUE,
-    ];
-
-    $form['username'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Username'),
-      '#default_value' => $this->configuration['username'],
-      '#required' => TRUE,
-    ];
-
-    $form['password'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Password'),
-      '#default_value' => $this->configuration['password'],
       '#required' => TRUE,
     ];
 
@@ -171,8 +155,6 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       $this->configuration['live_redirect_url'] = $values['live_redirect_url'];
       $this->configuration['merchant_id'] = $values['merchant_id'];
       $this->configuration['store_key'] = $values['store_key'];
-      $this->configuration['username'] = $values['username'];
-      $this->configuration['password'] = $values['password'];
       $this->configuration['use_display_name'] = $values['use_display_name'];
       $this->configuration['send_mail'] = $values['send_mail'];
       $this->configuration['show_payment_report_table'] = $values['show_payment_report_table'];

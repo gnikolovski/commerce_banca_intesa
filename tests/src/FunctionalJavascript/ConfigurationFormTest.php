@@ -52,8 +52,6 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
       'configuration[banca_intesa_offsite_redirect][live_redirect_url]' => 'live_redirect_url',
       'configuration[banca_intesa_offsite_redirect][merchant_id]' => 'merchant_id',
       'configuration[banca_intesa_offsite_redirect][store_key]' => 'store_key',
-      'configuration[banca_intesa_offsite_redirect][username]' => 'username',
-      'configuration[banca_intesa_offsite_redirect][password]' => 'password',
       'configuration[banca_intesa_offsite_redirect][use_display_name]' => TRUE,
       'configuration[banca_intesa_offsite_redirect][send_mail][success]' => TRUE,
       'configuration[banca_intesa_offsite_redirect][send_mail][fail]' => FALSE,
@@ -79,8 +77,6 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
     $this->assertEquals('live_redirect_url', $config['live_redirect_url']);
     $this->assertEquals('merchant_id', $config['merchant_id']);
     $this->assertEquals('store_key', $config['store_key']);
-    $this->assertEquals('username', $config['username']);
-    $this->assertEquals('password', $config['password']);
     $this->assertTrue($config['use_display_name']);
     $this->assertEquals('success', $config['send_mail']['success']);
     $this->assertEmpty($config['send_mail']['fail']);
