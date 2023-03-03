@@ -237,9 +237,14 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       throw new PaymentGatewayException($message);
     }
 
-    $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
     $banca_intesa_transaction_id = $request->request->get('TransId');
     $banca_intesa_response = $request->request->get('Response');
+    $banca_intesa_transaction_date = $request->request->get('EXTRA_TRXDATE');
+    $banca_intesa_authorization_code = $request->request->get('AuthCode');
+    $banca_intesa_status_code_3d = $request->request->get('mdStatus');
+    $banca_intesa_transaction_status_code = $request->request->get('ProcReturnCode');
+
+    $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
     $payment = $payment_storage->create([
       'state' => 'completed',
       'amount' => $order->getBalance(),
@@ -247,6 +252,9 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       'order_id' => $order->id(),
       'remote_id' => $banca_intesa_transaction_id,
       'remote_state' => $banca_intesa_response,
+      'authorized' => strtotime($banca_intesa_transaction_date),
+      'avs_response_code' => $banca_intesa_authorization_code,
+      'avs_response_code_label' => $banca_intesa_status_code_3d . '||' . $banca_intesa_transaction_status_code,
     ]);
     $payment->save();
 
