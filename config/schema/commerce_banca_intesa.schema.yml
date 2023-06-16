@@ -32,6 +32,9 @@ commerce_payment.commerce_payment_gateway.plugin.banca_intesa_offsite_redirect:
       sequence:
         type: string
       label: 'Show Payment report table'
+    auth_option:
+      type: string
+      label: 'Authentication option'
     api_logging:
       type: sequence
       sequence:

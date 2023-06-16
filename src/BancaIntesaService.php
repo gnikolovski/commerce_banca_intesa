@@ -104,7 +104,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
 
     return [
       'currency' => '941',
-      'trantype' => 'PreAuth',
+      'trantype' => $configuration['auth_option'] ?? 'PreAuth',
       'okUrl' => $this->getReturnUrl($order),
       'failUrl' => $this->getCancelUrl($order),
       'amount' => $order->getTotalPrice()->getNumber(),
@@ -282,7 +282,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
     $hash_data .= $order->getTotalPrice()->getNumber() . '|';
     $hash_data .= $this->getReturnUrl($order) . '|';
     $hash_data .= $this->getCancelUrl($order) . '|';
-    $hash_data .= 'PreAuth||';
+    $hash_data .= isset($configuration['auth_option']) ? $configuration['auth_option'] . '||' : 'PreAuth||';
     $hash_data .= $random_string . '||||';
     $hash_data .= '941|';
     $hash_data .= $this->cleanValue($configuration['store_key']);

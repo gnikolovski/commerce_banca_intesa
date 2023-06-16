@@ -63,6 +63,7 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
         'success' => 'success',
         'fail' => 'fail',
       ],
+      'auth_option' => 'PreAuth',
       'api_logging' => [
         'request' => 'request',
         'response' => 'response',
@@ -131,6 +132,17 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       '#default_value' => $this->configuration['show_payment_report_table'],
     ];
 
+    $form['auth_option'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Authentication option'),
+      '#required' => TRUE,
+      '#options' => [
+        'Auth' => $this->t('Auth'),
+        'PreAuth' => $this->t('PreAuth'),
+      ],
+      '#default_value' => $this->configuration['auth_option'] ?? 'PreAuth',
+    ];
+
     $form['api_logging'] = [
       '#type' => 'checkboxes',
       '#title' => $this->t('Log the following messages for debugging'),
@@ -158,6 +170,7 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       $this->configuration['use_display_name'] = $values['use_display_name'];
       $this->configuration['send_mail'] = $values['send_mail'];
       $this->configuration['show_payment_report_table'] = $values['show_payment_report_table'];
+      $this->configuration['auth_option'] = $values['auth_option'];
       $this->configuration['api_logging'] = $values['api_logging'];
     }
   }
