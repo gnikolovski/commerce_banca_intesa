@@ -17,12 +17,8 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
    */
   protected static $modules = [
     'commerce_banca_intesa',
+    'js_testing_ajax_request_test',
   ];
-
-  /**
-   * {@inheritdoc}
-   */
-  protected $defaultTheme = 'stark';
 
   /**
    * {@inheritdoc}
@@ -43,7 +39,6 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
     $this->assertSession()->addressEquals('admin/commerce/config/payment-gateways/add');
     $radio_button = $this->getSession()->getPage()->findField('Banca Intesa');
     $radio_button->click();
-    $this->assertSession()->assertWaitOnAjaxRequest();
     $this->getSession()->getPage()->fillField('label', 'Banca Intesa');
     $this->assertJsCondition('jQuery(".machine-name-value:visible").length > 0');
     $values = [
@@ -57,9 +52,9 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
       'configuration[banca_intesa_offsite_redirect][send_mail][fail]' => FALSE,
       'configuration[banca_intesa_offsite_redirect][show_payment_report_table][success]' => TRUE,
       'configuration[banca_intesa_offsite_redirect][show_payment_report_table][fail]' => FALSE,
+      'configuration[banca_intesa_offsite_redirect][auth_option]' => 'Auth',
       'configuration[banca_intesa_offsite_redirect][api_logging][request]' => TRUE,
       'configuration[banca_intesa_offsite_redirect][api_logging][response]' => FALSE,
-      'status' => TRUE,
     ];
     $this->submitForm($values, 'Save');
     $this->assertSession()->pageTextContains('Saved the Banca Intesa payment gateway.');
