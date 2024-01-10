@@ -15,7 +15,7 @@ class ConfigurationFormTest extends CommerceWebDriverTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'commerce_banca_intesa',
   ];
 

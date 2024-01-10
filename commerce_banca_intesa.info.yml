@@ -2,7 +2,7 @@ name: 'Commerce Banca Intesa'
 description: 'Provides Commerce integration with Banca Intesa Serbia payment services.'
 package: 'Commerce (contrib)'
 type: 'module'
-core_version_requirement: ^8.7.7 || ^9
+core_version_requirement: ^10
 dependencies:
   - commerce
   - commerce:commerce_order
