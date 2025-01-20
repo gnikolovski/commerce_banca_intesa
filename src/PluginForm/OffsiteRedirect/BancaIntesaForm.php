@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class BancaIntesaForm.
+ * Defines the BancaIntesaForm class.
  *
  * @package Drupal\commerce_banca_intesa\PluginForm\OffsiteRedirect
  */

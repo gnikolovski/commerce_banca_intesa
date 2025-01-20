@@ -6,7 +6,7 @@ use Drupal\commerce_order\Entity\OrderInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Interface BancaIntesaServiceInterface.
+ * Defines the BancaIntesaServiceInterface interface.
  *
  * @package Drupal\commerce_banca_intesa
  */

@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Class BancaIntesaService.
+ * Defines the BancaIntesaService class.
  *
  * @package Drupal\commerce_banca_intesa
  */
