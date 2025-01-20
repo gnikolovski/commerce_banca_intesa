@@ -14,7 +14,7 @@ function commerce_banca_intesa_help($route_name, RouteMatchInterface $route_matc
   switch ($route_name) {
     case 'help.page.commerce_banca_intesa':
       $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Provides Commerce integration with Banca Intesa Serbia payment services.') . '</p>';
+      $output .= '<p>' . t("Provides Drupal commerce integration with Banca Intesa Serbia's payment services.") . '</p>';
       return $output;
   }
 }
