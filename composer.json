@@ -12,7 +12,7 @@
   "license": "GPL-2.0+",
   "minimum-stability": "dev",
   "require": {
-    "drupal/commerce": "^2.20",
+    "drupal/commerce": "^2.20 || ^3.0@beta",
     "drupal/core": "^10 || ^11"
   }
 }
