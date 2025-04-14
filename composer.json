@@ -13,6 +13,7 @@
   "minimum-stability": "dev",
   "require": {
     "drupal/commerce": "^2.20 || ^3.0@beta",
-    "drupal/core": "^10 || ^11"
+    "drupal/core": "^10 || ^11",
+    "gnikolovski/gnikolovski_payment_log": "^1.0"
   }
 }
