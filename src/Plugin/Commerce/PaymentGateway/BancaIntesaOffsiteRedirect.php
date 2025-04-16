@@ -37,11 +37,19 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
   protected $bancaIntesaService;
 
   /**
+   * The payment log service.
+   *
+   * @var \Drupal\gnikolovski_payment_log\PaymentLogServiceInterface
+   */
+  protected $paymentLogService;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->bancaIntesaService = $container->get('commerce_banca_intesa.banca_intesa_service');
+    $instance->paymentLogService = $container->get('gnikolovski_payment_log.service');
     return $instance;
   }
 
@@ -276,7 +284,7 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
     $banca_intesa_transaction_status_code = $request->request->get('ProcReturnCode');
 
     $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
-    $payment = $payment_storage->create([
+    $payment_data = [
       'state' => 'completed',
       'amount' => $order->getBalance(),
       'payment_gateway' => $this->parentEntity->id(),
@@ -286,8 +294,12 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       'authorized' => strtotime($banca_intesa_transaction_date),
       'avs_response_code' => $banca_intesa_authorization_code,
       'avs_response_code_label' => $banca_intesa_status_code_3d . '||' . $banca_intesa_transaction_status_code,
-    ]);
+    ];
+    $payment = $payment_storage->create($payment_data);
     $payment->save();
+
+    // Log the payment response.
+    $this->paymentLogService->logResponse($order->id(), json_encode($payment_data));
 
     $message = $this->t('Payment completed successfully at @gateway.', [
       '@gateway' => $this->getPaymentGatewayName(),
@@ -310,6 +322,9 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
    * {@inheritdoc}
    */
   public function onCancel(OrderInterface $order, Request $request) {
+    // Log the payment response.
+    $this->paymentLogService->logCanceled($order->id());
+
     if (!empty($this->configuration['api_logging']['response'])) {
       $this->bancaIntesaService->log('Banca Intesa payment fail response: <pre>@body</pre>', [
         '@body' => var_export($request->request->all(), TRUE),

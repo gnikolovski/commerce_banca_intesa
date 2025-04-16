@@ -1,16 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\commerce_banca_intesa;
 
 use Drupal\commerce\MailHandlerInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_payment\Entity\PaymentGateway;
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use GuzzleHttp\Client;
+use SimpleXMLElement;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Defines the BancaIntesaService class.
@@ -22,66 +28,32 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   use StringTranslationTrait;
 
   /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The logger.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
-   */
-  protected $logger;
-
-  /**
-   * The mail handler.
-   *
-   * @var \Drupal\commerce\MailHandlerInterface
-   */
-  protected $mailHandler;
-
-  /**
-   * The profile view builder.
-   *
-   * @var \Drupal\profile\ProfileViewBuilder
-   */
-  protected $profileViewBuilder;
-
-  /**
-   * The current request.
-   *
-   * @var \Symfony\Component\HttpFoundation\Request
-   */
-  protected $currentRequest;
-
-  /**
    * BancaIntesaService constructor.
    *
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The logger.
-   * @param \Drupal\commerce\MailHandlerInterface $mail_handler
+   * @param \Drupal\commerce\MailHandlerInterface $mailHandler
    *   The mail handler.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
    */
-  public function __construct(RendererInterface $renderer, LoggerChannelFactoryInterface $loggerFactory, MailHandlerInterface $mail_handler, EntityTypeManagerInterface $entity_type_manager, RequestStack $request_stack) {
-    $this->renderer = $renderer;
-    $this->logger = $loggerFactory->get('commerce_banca_intesa');
-    $this->mailHandler = $mail_handler;
-    $this->profileViewBuilder = $entity_type_manager->getViewBuilder('profile');
-    $this->currentRequest = $request_stack->getCurrentRequest();
-  }
+  public function __construct(
+    #[Autowire(service: 'renderer')]
+    protected RendererInterface $renderer,
+    #[Autowire(service: 'logger.factory')]
+    protected LoggerChannelFactoryInterface $loggerFactory,
+    #[Autowire(service: 'commerce.mail_handler')]
+    protected MailHandlerInterface $mailHandler,
+    #[Autowire(service: 'entity_type.manager')]
+    protected EntityTypeManagerInterface $entityTypeManager,
+  ) {}
 
   /**
    * {@inheritDoc}
    */
-  public function getRedirectUrl(array $configuration) {
+  public function getRedirectUrl(array $configuration): string {
     if ($configuration['mode'] === 'live') {
       $redirect_url = $configuration['live_redirect_url'];
     }
@@ -95,7 +67,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   /**
    * {@inheritDoc}
    */
-  public function buildPostData(array $configuration, OrderInterface $order) {
+  public function buildPostData(array $configuration, OrderInterface $order): array {
     $random_string = md5(microtime());
     $shop_url = Url::fromRoute('<front>', [], [
       'absolute' => TRUE,
@@ -123,7 +95,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   /**
    * {@inheritDoc}
    */
-  public function isHashValid(array $configuration, OrderInterface $order, Request $request) {
+  public function isHashValid(array $configuration, OrderInterface $order, Request $request): bool {
     $banca_intesa_hash = $request->request->get('HASH');
     $banca_intesa_hash_parameters = $request->request->get('HASHPARAMS');
     $banca_intesa_parsed_hash_parameters = explode('|', $banca_intesa_hash_parameters);
@@ -148,7 +120,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   /**
    * {@inheritDoc}
    */
-  public function buildPaymentReportTable(Request $request) {
+  public function buildPaymentReportTable(Request $request): array {
     $order_id = $request->request->get('oid');
     $authorization_code = $request->request->get('AuthCode');
     $payment_status = $request->request->get('Response');
@@ -171,7 +143,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   /**
    * {@inheritDoc}
    */
-  public function getRenderedPaymentReportTable(Request $request) {
+  public function getRenderedPaymentReportTable(Request $request): MarkupInterface {
     $info_table_data = $this->buildPaymentReportTable($request);
 
     $info_table = [
@@ -186,14 +158,14 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   /**
    * {@inheritDoc}
    */
-  public function log($message, array $context) {
-    $this->logger->debug($message, $context);
+  public function log(string $message, array $context) {
+    $this->loggerFactory->get('commerce_banca_intesa')->debug($message, $context);
   }
 
   /**
    * {@inheritDoc}
    */
-  public function sendMail(OrderInterface $order, $message, array $payment_report) {
+  public function sendMail(OrderInterface $order, $message, array $payment_report): bool {
     $to = $order->getEmail();
     $subject = $this->t('Payment report for order #@number', ['@number' => $order->id()]);
 
@@ -225,7 +197,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
    * @return string
    *   The cleaned value.
    */
-  protected function cleanValue($value) {
+  protected function cleanValue($value): string {
     return str_replace('|', '\\|', str_replace('\\', '\\\\', $value));
   }
 
@@ -238,7 +210,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
    * @return string
    *   The return URL.
    */
-  protected function getReturnUrl(OrderInterface $order) {
+  protected function getReturnUrl(OrderInterface $order): string {
     $return_url = Url::fromRoute('commerce_payment.checkout.return', [
       'commerce_order' => $order->id(),
       'step' => 'payment',
@@ -255,7 +227,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
    * @return string
    *   The cancel URL.
    */
-  protected function getCancelUrl(OrderInterface $order) {
+  protected function getCancelUrl(OrderInterface $order): string {
     $cancel_url = Url::fromRoute('commerce_payment.checkout.cancel', [
       'commerce_order' => $order->id(),
       'step' => 'payment',
@@ -276,7 +248,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
    * @return string
    *   The generated hash.
    */
-  protected function generateHash(array $configuration, OrderInterface $order, $random_string) {
+  protected function generateHash(array $configuration, OrderInterface $order, $random_string): string {
     $hash_data = $this->cleanValue($configuration['merchant_id']) . '|';
     $hash_data .= $order->id() . '|';
     $hash_data .= $order->getTotalPrice()->getNumber() . '|';
@@ -287,6 +259,133 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
     $hash_data .= '941|';
     $hash_data .= $this->cleanValue($configuration['store_key']);
     return base64_encode(hash('sha512', $hash_data, TRUE));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public function isRemoteOrderPaid(string $order_id): bool {
+    $payment_gateways = $this->entityTypeManager
+      ->getStorage('commerce_payment_gateway')
+      ->loadByProperties(['plugin' => 'banca_intesa_offsite_redirect']);
+    if (empty($payment_gateways)) {
+      $this->log('Payment plugin with ID: @id not found.', ['@id' => 'banca_intesa_offsite_redirect']);
+      return FALSE;
+    }
+
+    // Get payment gateway configuration.
+    $payment_gateway = reset($payment_gateways);
+    $configuration = $payment_gateway->getPluginConfiguration();
+    $api_url = $configuration[$configuration['mode'] . '_api_url'];
+    $merchant_id = $configuration['merchant_id'];
+    $username = $configuration['username'];
+    $password = $configuration['password'];
+
+    // Build the XML request.
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+    $xml .= '<CC5Request>';
+    $xml .= '<Name>' . $username . '</Name>';
+    $xml .= '<Password>' . $password . '</Password>';
+    $xml .= '<ClientId>' . $merchant_id . '</ClientId>';
+    $xml .= '<OrderId>' . $order_id . '</OrderId>';
+    $xml .= '<Extra>';
+    $xml .= '<ORDERSTATUS>QUERY</ORDERSTATUS>';
+    $xml .= '</Extra>';
+    $xml .= '</CC5Request>';
+
+    $client = new Client();
+
+    try {
+      $response = $client->post($api_url, [
+        'form_params' => [
+          'DATA' => $xml,
+        ],
+        'headers' => [
+          'Content-Type' => 'application/x-www-form-urlencoded',
+        ],
+      ]);
+
+      $http_status = $response->getStatusCode();
+      if ($http_status === 200) {
+        $body = (string) $response->getBody();
+        $xml_response = simplexml_load_string($body);
+        $proc_return_code = $xml_response->ProcReturnCode;
+        $response_status = $xml_response->Response;
+
+        if ($proc_return_code == '00' && $response_status == 'Approved') {
+          $this->log('Banca Intesa return code: @proc_return_code and response status: @response_status.', [
+            '@proc_return_code' => $proc_return_code,
+            '@response_status' => $response_status,
+          ]);
+          $this->finalizeOrder($order_id, $payment_gateway, $xml_response);
+          return TRUE;
+        }
+        else {
+          $this->log('Banca Intesa return code: @proc_return_code and response status: @response_status.', [
+            '@proc_return_code' => $proc_return_code,
+            '@response_status' => $response_status,
+          ]);
+          return FALSE;
+        }
+      }
+      else {
+        $this->log('Banca Intesa http status: @status', ['@status' => $http_status]);
+        return FALSE;
+      }
+    }
+    catch (\Exception $e) {
+      $this->log('Banca Intesa error querying order status: @error', ['@error' => $e->getMessage()]);
+      return FALSE;
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  protected function finalizeOrder(string $order_id, PaymentGateway $payment_gateway, SimpleXMLElement $xml_response): void {
+    $order_storage = $this->entityTypeManager->getStorage('commerce_order');
+    $order = $order_storage->load($order_id);
+    if (!$order instanceof OrderInterface) {
+      return;
+    }
+
+    $banca_intesa_transaction_id = (string) $xml_response->TransId;
+    $banca_intesa_response = (string) $xml_response->Response;
+    $banca_intesa_transaction_date = (string) $xml_response->Extra->CAPTURE_DTTM;
+    $banca_intesa_authorization_code = (string) $xml_response->Extra->AUTH_CODE;
+    $banca_intesa_status_code_3d = (string) $xml_response->Extra->MDSTATUS;
+    $banca_intesa_transaction_status_code = (string) $xml_response->ProcReturnCode;
+
+    $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
+    $payment_data = [
+      'type' => 'payment_default',
+      'state' => 'completed',
+      'amount' => $order->getBalance(),
+      'payment_gateway' => $payment_gateway->id(),
+      'order_id' => $order->id(),
+      'remote_id' => $banca_intesa_transaction_id,
+      'remote_state' => $banca_intesa_response,
+      'authorized' => strtotime($banca_intesa_transaction_date),
+      'avs_response_code' => $banca_intesa_authorization_code,
+      'avs_response_code_label' => $banca_intesa_status_code_3d . '||' . $banca_intesa_transaction_status_code,
+    ];
+    $payment = $payment_storage->create($payment_data);
+    $payment->save();
+
+    $order->getState()->applyTransitionById('place');
+    $order->save();
+
+    $message = $this->t('Card payment has been successful.');
+    $payment_report = [
+      ['name' => $this->t('Order ID'), 'value' => $order->id()],
+      ['name' => $this->t('Authorization code'), 'value' => $banca_intesa_authorization_code],
+      ['name' => $this->t('Payment status'), 'value' => $banca_intesa_response],
+      ['name' => $this->t('Transaction status code'), 'value' => $banca_intesa_transaction_status_code],
+      ['name' => $this->t('Transaction ID'), 'value' => $banca_intesa_transaction_id],
+      ['name' => $this->t('Transaction date'), 'value' => $banca_intesa_transaction_date],
+      ['name' => $this->t('Status code for the 3D transaction'), 'value' => $banca_intesa_status_code_3d],
+    ];
+    $this->sendMail($order, $message, $payment_report);
   }
 
 }
