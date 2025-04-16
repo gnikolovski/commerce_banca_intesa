@@ -52,7 +52,11 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
     return [
       'test_redirect_url' => 'https://testsecurepay.eway2pay.com/fim/est3Dgate',
       'live_redirect_url' => 'https://bib.eway2pay.com/fim/est3Dgate',
+      'test_api_url' => 'https://testsecurepay.eway2pay.com/fim/api',
+      'live_api_url' => 'https://bib.eway2pay.com/fim/api',
       'merchant_id' => '',
+      'username' => '',
+      'password' => '',
       'store_key' => '',
       'use_display_name' => FALSE,
       'send_mail' => [
@@ -91,10 +95,38 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       '#required' => TRUE,
     ];
 
+    $form['test_api_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Test API URL'),
+      '#default_value' => $this->configuration['test_api_url'],
+      '#required' => TRUE,
+    ];
+
+    $form['live_api_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Live API URL'),
+      '#default_value' => $this->configuration['live_api_url'],
+      '#required' => TRUE,
+    ];
+
     $form['merchant_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Merchant ID'),
       '#default_value' => $this->configuration['merchant_id'],
+      '#required' => TRUE,
+    ];
+
+    $form['username'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Username'),
+      '#default_value' => $this->configuration['username'],
+      '#required' => TRUE,
+    ];
+
+    $form['password'] = [
+      '#type' => 'password',
+      '#title' => $this->t('Password'),
+      '#default_value' => $this->configuration['password'],
       '#required' => TRUE,
     ];
 
@@ -165,7 +197,11 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       $values = $form_state->getValue($form['#parents']);
       $this->configuration['test_redirect_url'] = $values['test_redirect_url'];
       $this->configuration['live_redirect_url'] = $values['live_redirect_url'];
+      $this->configuration['test_api_url'] = $values['test_api_url'];
+      $this->configuration['live_api_url'] = $values['live_api_url'];
       $this->configuration['merchant_id'] = $values['merchant_id'];
+      $this->configuration['username'] = $values['username'];
+      $this->configuration['password'] = $values['password'];
       $this->configuration['store_key'] = $values['store_key'];
       $this->configuration['use_display_name'] = $values['use_display_name'];
       $this->configuration['send_mail'] = $values['send_mail'];
