@@ -7,4 +7,3 @@ dependencies:
   - commerce
   - commerce:commerce_order
   - commerce:commerce_payment
-  - gnikolovski_payment_log:gnikolovski_payment_log
