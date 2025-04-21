@@ -381,6 +381,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
     $payment->save();
 
     $order->getState()->applyTransitionById('place');
+    $order->unlock();
     $order->save();
 
     $message = $this->t('Card payment has been successful.');
