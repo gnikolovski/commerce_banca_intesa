@@ -309,32 +309,40 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
       if ($http_status === 200) {
         $body = (string) $response->getBody();
         $xml_response = simplexml_load_string($body);
-        $proc_return_code = $xml_response->ProcReturnCode;
-        $response_status = $xml_response->Response;
+        $proc_return_code = (string) $xml_response->ProcReturnCode;
+        $response_status = (string) $xml_response->Response;
 
         if ($proc_return_code == '00' && $response_status == 'Approved') {
-          $this->log('Banca Intesa return code: @proc_return_code and response status: @response_status.', [
+          $this->log('Banca Intesa return code: @proc_return_code and response status: @response_status for order @order_id.', [
             '@proc_return_code' => $proc_return_code,
             '@response_status' => $response_status,
+            '@order_id' => $order_id,
           ]);
           $this->finalizeOrder($order_id, $payment_gateway, $xml_response);
           return TRUE;
         }
         else {
-          $this->log('Banca Intesa return code: @proc_return_code and response status: @response_status.', [
+          $this->log('Banca Intesa return code: @proc_return_code and response status: @response_status for order @order_id.', [
             '@proc_return_code' => $proc_return_code,
             '@response_status' => $response_status,
+            '@order_id' => $order_id,
           ]);
           return FALSE;
         }
       }
       else {
-        $this->log('Banca Intesa http status: @status', ['@status' => $http_status]);
+        $this->log('Banca Intesa http status: @status for order @order_id.', [
+          '@status' => $http_status,
+          '@order_id' => $order_id,
+        ]);
         return FALSE;
       }
     }
     catch (\Exception $e) {
-      $this->log('Banca Intesa error querying order status: @error', ['@error' => $e->getMessage()]);
+      $this->log('Banca Intesa error querying order status: @error for order @order_id.', [
+        '@error' => $e->getMessage(),
+        '@order_id' => $order_id,
+      ]);
       return FALSE;
     }
   }
