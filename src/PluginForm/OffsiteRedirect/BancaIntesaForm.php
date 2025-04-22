@@ -73,8 +73,7 @@ class BancaIntesaForm extends BasePaymentOffsiteForm implements ContainerInjecti
     $this->paymentLogService->logRequest(
       $order->getEmail(),
       $order->id(),
-      '',
-      '',
+      [],
       $this->entity->getPaymentGateway()->getPluginId(),
       json_encode($post_data),
     );
