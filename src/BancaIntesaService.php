@@ -6,15 +6,15 @@ namespace Drupal\commerce_banca_intesa;
 
 use Drupal\commerce\MailHandlerInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
-use Drupal\commerce_payment\Entity\PaymentGateway;
+use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use GuzzleHttp\Client;
-use SimpleXMLElement;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -165,9 +165,9 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   /**
    * {@inheritDoc}
    */
-  public function sendMail(OrderInterface $order, $message, array $payment_report): bool {
+  public function sendMail(OrderInterface $order, string|TranslatableMarkup $message, array $payment_report): bool {
     $to = $order->getEmail();
-    $subject = $this->t('Payment report for order #@number', ['@number' => $order->id()]);
+    $subject = 'Payment report for order #' . $order->id();
 
     $body = [
       '#theme' => 'commerce_banca_intesa_payment_report',
@@ -274,6 +274,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
     }
 
     // Get payment gateway configuration.
+    /** @var \Drupal\commerce_payment\Entity\PaymentGatewayInterface $payment_gateway */
     $payment_gateway = reset($payment_gateways);
     $configuration = $payment_gateway->getPluginConfiguration();
     $api_url = $configuration[$configuration['mode'] . '_api_url'];
@@ -350,7 +351,7 @@ class BancaIntesaService implements BancaIntesaServiceInterface {
   /**
    * {@inheritDoc}
    */
-  protected function finalizeOrder(string $order_id, PaymentGateway $payment_gateway, SimpleXMLElement $xml_response): void {
+  protected function finalizeOrder(string $order_id, PaymentGatewayInterface $payment_gateway, \SimpleXMLElement $xml_response): void {
     $order_storage = $this->entityTypeManager->getStorage('commerce_order');
     $order = $order_storage->load($order_id);
     if (!$order instanceof OrderInterface) {

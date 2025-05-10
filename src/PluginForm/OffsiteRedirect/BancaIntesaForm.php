@@ -35,6 +35,8 @@ class BancaIntesaForm extends BasePaymentOffsiteForm implements ContainerInjecti
    *
    * @param \Drupal\commerce_banca_intesa\BancaIntesaServiceInterface $banca_intesa_service
    *   The banca intesa service.
+   * @param \Drupal\gnikolovski_payment_log\PaymentLogServiceInterface $payment_log_service
+   *   The payment log service.
    */
   public function __construct(BancaIntesaServiceInterface $banca_intesa_service, PaymentLogServiceInterface $payment_log_service) {
     $this->bancaIntesaService = $banca_intesa_service;
@@ -56,9 +58,11 @@ class BancaIntesaForm extends BasePaymentOffsiteForm implements ContainerInjecti
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildConfigurationForm($form, $form_state);
-    $configuration = $this->entity->getPaymentGateway()->getPluginConfiguration();
+    /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
+    $payment = $this->entity;
+    $configuration = $payment->getPaymentGateway()->getPluginConfiguration();
     /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
-    $order = $this->entity->getOrder();
+    $order = $payment->getOrder();
 
     $redirect_url = $this->bancaIntesaService->getRedirectUrl($configuration);
     $post_data = $this->bancaIntesaService->buildPostData($configuration, $order);

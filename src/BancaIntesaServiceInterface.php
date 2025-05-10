@@ -4,6 +4,7 @@ namespace Drupal\commerce_banca_intesa;
 
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -89,7 +90,7 @@ interface BancaIntesaServiceInterface {
    *
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
    *   The order.
-   * @param string $message
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $message
    *   The message text.
    * @param array $payment_report
    *   The payment report data.
@@ -97,7 +98,7 @@ interface BancaIntesaServiceInterface {
    * @return bool
    *   TRUE if the email was sent successfully, FALSE otherwise.
    */
-  public function sendMail(OrderInterface $order, $message, array $payment_report): bool;
+  public function sendMail(OrderInterface $order, string|TranslatableMarkup $message, array $payment_report): bool;
 
   /**
    * Checks if the remote order is paid.
