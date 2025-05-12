@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the module.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_requirements().
+ */
+function commerce_banca_intesa_requirements($phase): array {
+  $requirements = [];
+
+  if ($phase == 'runtime' && PHP_SAPI !== 'cli') {
+    if (ini_get('session.cookie_samesite') === 'None') {
+      $requirements['commerce_banca_intesa_cookie_samesite'] = [
+        'title' => t('Cookie samesite attribute'),
+        'description' => t('The "cookie_samesite" attribute is set to "None", which is necessary for the payment redirection to work properly.'),
+        'severity' => REQUIREMENT_OK,
+      ];
+    }
+    else {
+      $requirements['commerce_banca_intesa_cookie_samesite'] = [
+        'title' => t('Cookie samesite attribute'),
+        'description' => t('The "cookie_samesite" attribute must be set to "None" for the payment redirection to work properly. Please update your "services.yml" file. If HTTPS is not enabled for this environment, please ignore this warning; however, do not expect this module to function properly.'),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+  }
+
+  return $requirements;
+}
