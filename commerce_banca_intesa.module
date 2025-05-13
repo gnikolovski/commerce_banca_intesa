@@ -5,45 +5,31 @@
  * Provides Commerce integration with Banca Intesa Serbia payment services.
  */
 
-use Drupal\Core\Routing\RouteMatchInterface;
-
-/**
- * Implements hook_help().
- */
-function commerce_banca_intesa_help($route_name, RouteMatchInterface $route_match) {
-  switch ($route_name) {
-    case 'help.page.commerce_banca_intesa':
-      $output = '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('Provides Commerce integration with Banca Intesa Serbia payment services.') . '</p>';
-      return $output;
-  }
-}
+declare(strict_types=1);
 
 /**
  * Implements hook_mail().
  */
-function commerce_banca_intesa_mail($key, &$message, $params) {
-  switch ($key) {
-    case 'commerce_banca_intesa_payment_report':
-      /** @var \Drupal\Core\Render\RendererInterface $renderer */
-      $renderer = \Drupal::service('renderer');
+function commerce_banca_intesa_mail($key, &$message, $params): void {
+  if ($key == 'commerce_banca_intesa_payment_report') {
+    /** @var \Drupal\Core\Render\RendererInterface $renderer */
+    $renderer = \Drupal::service('renderer');
 
-      if (isset($params['headers'])) {
-        $message['headers'] = array_merge($message['headers'], $params['headers']);
-      }
-      if (!empty($params['from'])) {
-        $message['from'] = $params['from'];
-      }
-      $message['subject'] = $params['subject'];
-      $message['body'][] = $renderer->render($params['body']);
-      break;
+    if (isset($params['headers'])) {
+      $message['headers'] = array_merge($message['headers'], $params['headers']);
+    }
+    if (!empty($params['from'])) {
+      $message['from'] = $params['from'];
+    }
+    $message['subject'] = $params['subject'];
+    $message['body'][] = $renderer->render($params['body']);
   }
 }
 
 /**
  * Implements hook_theme().
  */
-function commerce_banca_intesa_theme($existing, $type, $theme, $path) {
+function commerce_banca_intesa_theme($existing, $type, $theme, $path): array {
   return [
     'commerce_banca_intesa_payment_report' => [
       'variables' => [
@@ -53,4 +39,29 @@ function commerce_banca_intesa_theme($existing, $type, $theme, $path) {
       ],
     ],
   ];
+}
+
+/**
+ * Implements hook_cron().
+ */
+function commerce_banca_intesa_cron(): void {
+  if (\Drupal::moduleHandler()->moduleExists('gnikolovski_payment_log')) {
+    $payment_log_service = \Drupal::service('gnikolovski_payment_log.service');
+    $banca_intesa_service = \Drupal::service('commerce_banca_intesa.banca_intesa_service');
+
+    if ($pending_orders = $payment_log_service->getPendingOrderIds(1000)) {
+      foreach ($pending_orders as $pending_order) {
+        $order_id = $pending_order->order_id;
+
+        if (empty($order_id)) {
+          continue;
+        }
+
+        $payment_log_service->logAttempt($order_id);
+        if ($banca_intesa_service->isRemoteOrderPaid($order_id)) {
+          $payment_log_service->logResponse($order_id, 'Payment approved.');
+        }
+      }
+    }
+  }
 }

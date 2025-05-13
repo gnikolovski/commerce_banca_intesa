@@ -6,4 +6,3 @@ services:
       - '@logger.factory'
       - '@commerce.mail_handler'
       - '@entity_type.manager'
-      - '@request_stack']

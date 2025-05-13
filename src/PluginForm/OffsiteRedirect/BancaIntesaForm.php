@@ -5,6 +5,7 @@ namespace Drupal\commerce_banca_intesa\PluginForm\OffsiteRedirect;
 use Drupal\commerce_banca_intesa\BancaIntesaServiceInterface;
 use Drupal\commerce_payment\PluginForm\PaymentOffsiteForm as BasePaymentOffsiteForm;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -20,16 +21,26 @@ class BancaIntesaForm extends BasePaymentOffsiteForm implements ContainerInjecti
    *
    * @var \Drupal\commerce_banca_intesa\BancaIntesaServiceInterface
    */
-  protected $bancaIntesaService;
+  protected BancaIntesaServiceInterface $bancaIntesaService;
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * Constructs a new BancaIntesaForm object.
    *
    * @param \Drupal\commerce_banca_intesa\BancaIntesaServiceInterface $banca_intesa_service
    *   The banca intesa service.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    */
-  public function __construct(BancaIntesaServiceInterface $banca_intesa_service) {
+  public function __construct(BancaIntesaServiceInterface $banca_intesa_service, ModuleHandlerInterface $module_handler) {
     $this->bancaIntesaService = $banca_intesa_service;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -37,17 +48,21 @@ class BancaIntesaForm extends BasePaymentOffsiteForm implements ContainerInjecti
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('commerce_banca_intesa.banca_intesa_service')
+      $container->get('commerce_banca_intesa.banca_intesa_service'),
+      $container->get('module_handler')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form = parent::buildConfigurationForm($form, $form_state);
-    $configuration = $this->entity->getPaymentGateway()->getPluginConfiguration();
-    $order = $this->entity->getOrder();
+    /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
+    $payment = $this->entity;
+    $configuration = $payment->getPaymentGateway()->getPluginConfiguration();
+    /** @var \Drupal\commerce_order\Entity\OrderInterface $order */
+    $order = $payment->getOrder();
 
     $redirect_url = $this->bancaIntesaService->getRedirectUrl($configuration);
     $post_data = $this->bancaIntesaService->buildPostData($configuration, $order);
@@ -59,15 +74,24 @@ class BancaIntesaForm extends BasePaymentOffsiteForm implements ContainerInjecti
       ]);
     }
 
-    $form = $this->buildRedirectForm(
+    if ($this->moduleHandler->moduleExists('gnikolovski_payment_log')) {
+      $payment_log_service = \Drupal::service('gnikolovski_payment_log.service');
+      $payment_log_service->logRequest(
+        $order->getEmail(),
+        $order->id(),
+        [],
+        $this->entity->getPaymentGateway()->getPluginId(),
+        json_encode($post_data),
+      );
+    }
+
+    return $this->buildRedirectForm(
       $form,
       $form_state,
       $redirect_url,
       $post_data,
       self::REDIRECT_POST
     );
-
-    return $form;
   }
 
 }

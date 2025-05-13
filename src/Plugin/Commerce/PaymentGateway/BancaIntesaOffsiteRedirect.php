@@ -2,10 +2,12 @@
 
 namespace Drupal\commerce_banca_intesa\Plugin\Commerce\PaymentGateway;
 
+use Drupal\commerce_banca_intesa\BancaIntesaServiceInterface;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_payment\Exception\PaymentGatewayException;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,7 +36,14 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
    *
    * @var \Drupal\commerce_banca_intesa\BancaIntesaServiceInterface
    */
-  protected $bancaIntesaService;
+  protected BancaIntesaServiceInterface $bancaIntesaService;
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected ModuleHandlerInterface $moduleHandler;
 
   /**
    * {@inheritdoc}
@@ -42,17 +51,22 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = parent::create($container, $configuration, $plugin_id, $plugin_definition);
     $instance->bancaIntesaService = $container->get('commerce_banca_intesa.banca_intesa_service');
+    $instance->moduleHandler = $container->get('module_handler');
     return $instance;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return [
       'test_redirect_url' => 'https://testsecurepay.eway2pay.com/fim/est3Dgate',
       'live_redirect_url' => 'https://bib.eway2pay.com/fim/est3Dgate',
+      'test_api_url' => 'https://testsecurepay.eway2pay.com/fim/api',
+      'live_api_url' => 'https://bib.eway2pay.com/fim/api',
       'merchant_id' => '',
+      'username' => '',
+      'password' => '',
       'store_key' => '',
       'use_display_name' => FALSE,
       'send_mail' => [
@@ -74,7 +88,7 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['test_redirect_url'] = [
@@ -91,10 +105,38 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       '#required' => TRUE,
     ];
 
+    $form['test_api_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Test API URL'),
+      '#default_value' => $this->configuration['test_api_url'],
+      '#required' => TRUE,
+    ];
+
+    $form['live_api_url'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Live API URL'),
+      '#default_value' => $this->configuration['live_api_url'],
+      '#required' => TRUE,
+    ];
+
     $form['merchant_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Merchant ID'),
       '#default_value' => $this->configuration['merchant_id'],
+      '#required' => TRUE,
+    ];
+
+    $form['username'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Username'),
+      '#default_value' => $this->configuration['username'],
+      '#required' => TRUE,
+    ];
+
+    $form['password'] = [
+      '#type' => 'password',
+      '#title' => $this->t('Password'),
+      '#default_value' => $this->configuration['password'],
       '#required' => TRUE,
     ];
 
@@ -159,13 +201,17 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     parent::submitConfigurationForm($form, $form_state);
     if (!$form_state->getErrors()) {
       $values = $form_state->getValue($form['#parents']);
       $this->configuration['test_redirect_url'] = $values['test_redirect_url'];
       $this->configuration['live_redirect_url'] = $values['live_redirect_url'];
+      $this->configuration['test_api_url'] = $values['test_api_url'];
+      $this->configuration['live_api_url'] = $values['live_api_url'];
       $this->configuration['merchant_id'] = $values['merchant_id'];
+      $this->configuration['username'] = $values['username'];
+      $this->configuration['password'] = $values['password'];
       $this->configuration['store_key'] = $values['store_key'];
       $this->configuration['use_display_name'] = $values['use_display_name'];
       $this->configuration['send_mail'] = $values['send_mail'];
@@ -178,7 +224,7 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
   /**
    * {@inheritdoc}
    */
-  public function onReturn(OrderInterface $order, Request $request) {
+  public function onReturn(OrderInterface $order, Request $request): void {
     if (!empty($this->configuration['api_logging']['response'])) {
       $this->bancaIntesaService->log('Banca Intesa payment success response: <pre>@body</pre>', [
         '@body' => var_export($request->request->all(), TRUE),
@@ -240,7 +286,7 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
     $banca_intesa_transaction_status_code = $request->request->get('ProcReturnCode');
 
     $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
-    $payment = $payment_storage->create([
+    $payment_data = [
       'state' => 'completed',
       'amount' => $order->getBalance(),
       'payment_gateway' => $this->parentEntity->id(),
@@ -250,8 +296,15 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
       'authorized' => strtotime($banca_intesa_transaction_date),
       'avs_response_code' => $banca_intesa_authorization_code,
       'avs_response_code_label' => $banca_intesa_status_code_3d . '||' . $banca_intesa_transaction_status_code,
-    ]);
+    ];
+    $payment = $payment_storage->create($payment_data);
     $payment->save();
+
+    if ($this->moduleHandler->moduleExists('gnikolovski_payment_log')) {
+      $payment_log_service = \Drupal::service('gnikolovski_payment_log.service');
+      // Log the payment response.
+      $payment_log_service->logResponse($order->id(), json_encode($payment_data));
+    }
 
     $message = $this->t('Payment completed successfully at @gateway.', [
       '@gateway' => $this->getPaymentGatewayName(),
@@ -273,7 +326,13 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
   /**
    * {@inheritdoc}
    */
-  public function onCancel(OrderInterface $order, Request $request) {
+  public function onCancel(OrderInterface $order, Request $request): void {
+    if ($this->moduleHandler->moduleExists('gnikolovski_payment_log')) {
+      $payment_log_service = \Drupal::service('gnikolovski_payment_log.service');
+      // Log the payment response.
+      $payment_log_service->logCanceled($order->id());
+    }
+
     if (!empty($this->configuration['api_logging']['response'])) {
       $this->bancaIntesaService->log('Banca Intesa payment fail response: <pre>@body</pre>', [
         '@body' => var_export($request->request->all(), TRUE),
@@ -323,7 +382,7 @@ class BancaIntesaOffsiteRedirect extends OffsitePaymentGatewayBase implements Of
    * @return string
    *   The payment gateway name.
    */
-  protected function getPaymentGatewayName() {
+  protected function getPaymentGatewayName(): string {
     if (!empty($this->configuration['use_display_name'])) {
       $name = $this->getDisplayLabel();
     }

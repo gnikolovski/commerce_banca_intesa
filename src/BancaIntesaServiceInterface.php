@@ -3,10 +3,12 @@
 namespace Drupal\commerce_banca_intesa;
 
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\Component\Render\MarkupInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Interface BancaIntesaServiceInterface.
+ * Defines the BancaIntesaServiceInterface interface.
  *
  * @package Drupal\commerce_banca_intesa
  */
@@ -21,7 +23,7 @@ interface BancaIntesaServiceInterface {
    * @return string
    *   The payment gateway redirect URL.
    */
-  public function getRedirectUrl(array $configuration);
+  public function getRedirectUrl(array $configuration): string;
 
   /**
    * Builds the data that we are sending to the payment gateway provider.
@@ -34,7 +36,7 @@ interface BancaIntesaServiceInterface {
    * @return array
    *   The data that we are sending to the payment gateway provider.
    */
-  public function buildPostData(array $configuration, OrderInterface $order);
+  public function buildPostData(array $configuration, OrderInterface $order): array;
 
   /**
    * Checks if hash is valid.
@@ -49,7 +51,7 @@ interface BancaIntesaServiceInterface {
    * @return bool
    *   TRUE if hash is valid, otherwise FALSE.
    */
-  public function isHashValid(array $configuration, OrderInterface $order, Request $request);
+  public function isHashValid(array $configuration, OrderInterface $order, Request $request): bool;
 
   /**
    * Creates the payment report data.
@@ -60,7 +62,7 @@ interface BancaIntesaServiceInterface {
    * @return array
    *   The payment report data.
    */
-  public function buildPaymentReportTable(Request $request);
+  public function buildPaymentReportTable(Request $request): array;
 
   /**
    * Gets the rendered payment report table.
@@ -71,7 +73,7 @@ interface BancaIntesaServiceInterface {
    * @return \Drupal\Component\Render\MarkupInterface
    *   The rendered payment report data.
    */
-  public function getRenderedPaymentReportTable(Request $request);
+  public function getRenderedPaymentReportTable(Request $request): MarkupInterface;
 
   /**
    * Logs the message.
@@ -81,14 +83,14 @@ interface BancaIntesaServiceInterface {
    * @param array $context
    *   The log message context.
    */
-  public function log($message, array $context);
+  public function log(string $message, array $context);
 
   /**
    * Sends the email to customer.
    *
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
    *   The order.
-   * @param string $message
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $message
    *   The message text.
    * @param array $payment_report
    *   The payment report data.
@@ -96,6 +98,17 @@ interface BancaIntesaServiceInterface {
    * @return bool
    *   TRUE if the email was sent successfully, FALSE otherwise.
    */
-  public function sendMail(OrderInterface $order, $message, array $payment_report);
+  public function sendMail(OrderInterface $order, string|TranslatableMarkup $message, array $payment_report): bool;
+
+  /**
+   * Checks if the remote order is paid.
+   *
+   * @param string $order_id
+   *   The order ID.
+   *
+   * @return bool
+   *   TRUE if order is paid, FALSE otherwise.
+   */
+  public function isRemoteOrderPaid(string $order_id): bool;
 
 }
