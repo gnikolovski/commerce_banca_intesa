@@ -13,6 +13,7 @@ use Drupal\Core\Url;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\commerce_payment\Entity\PaymentGatewayInterface;
 use GuzzleHttp\Client;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Class BancaIntesaService.
