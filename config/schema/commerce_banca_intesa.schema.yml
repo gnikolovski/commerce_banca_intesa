@@ -7,18 +7,24 @@ commerce_payment.commerce_payment_gateway.plugin.banca_intesa_offsite_redirect:
     live_redirect_url:
       type: string
       label: 'Live redirect URL'
+    test_api_url:
+      type: string
+      label: 'Test API URL'
+    live_api_url:
+      type: string
+      label: 'Live API URL'
     merchant_id:
       type: string
       label: 'Merchant ID'
-    store_key:
-      type: string
-      label: 'Store key'
     username:
       type: string
       label: 'Username'
     password:
       type: string
       label: 'Password'
+    store_key:
+      type: string
+      label: 'Store key'
     use_display_name:
       type: boolean
       label: 'Use Display name as gateway name'
